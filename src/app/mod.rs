@@ -15,9 +15,9 @@ pub async fn serve() -> Result<(), Box<dyn std::error::Error>> {
                 .on_response(trace::DefaultOnResponse::new()),
         );
 
-    let listener = TcpListener::bind("127.0.0.1:8000").await?;
+    let listener = TcpListener::bind("0.0.0.0:10000").await?;
 
-    tracing::info!("Listening on http://127.0.0.1:8000");
+    tracing::info!("listening on 0.0.0.0:10000");
     axum::serve(listener, app).await?;
 
     Ok(())
