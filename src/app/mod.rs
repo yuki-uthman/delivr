@@ -2,10 +2,11 @@ use axum::{routing::get, Router};
 use tokio::net::TcpListener;
 use tower_http::trace::{self, TraceLayer};
 
+use crate::config::Config;
 use crate::error::Result;
 use crate::routes::health;
 
-pub async fn serve() -> Result<()> {
+pub async fn serve(config: Config) -> Result<()> {
     let app = Router::new()
         .route("/health", get(health))
         // Add a tracing layer to all requests
@@ -16,9 +17,10 @@ pub async fn serve() -> Result<()> {
                 .on_response(trace::DefaultOnResponse::new()),
         );
 
-    let listener = TcpListener::bind("0.0.0.0:10000").await?;
+    let addr = format!("{}:{}", config.application.host, config.application.port);
+    let listener = TcpListener::bind(addr).await?;
 
-    tracing::info!("listening on 0.0.0.0:10000");
+    tracing::info!("listening on {:?}", listener.local_addr()?);
     axum::serve(listener, app).await?;
 
     Ok(())
