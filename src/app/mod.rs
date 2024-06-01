@@ -2,9 +2,10 @@ use axum::{routing::get, Router};
 use tokio::net::TcpListener;
 use tower_http::trace::{self, TraceLayer};
 
+use crate::error::Result;
 use crate::routes::health;
 
-pub async fn serve() -> Result<(), Box<dyn std::error::Error>> {
+pub async fn serve() -> Result<()> {
     let app = Router::new()
         .route("/health", get(health))
         // Add a tracing layer to all requests
