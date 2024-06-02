@@ -1,7 +1,7 @@
 use serde_aux::field_attributes::deserialize_number_from_string;
 use std::convert::{TryFrom, TryInto};
 
-use crate::error::{Result, Error};
+use crate::error::{Error, Result};
 
 #[derive(serde::Deserialize, Clone, Debug)]
 pub struct Config {
@@ -77,4 +77,3 @@ impl TryFrom<String> for Environment {
         }
     }
 }
-
