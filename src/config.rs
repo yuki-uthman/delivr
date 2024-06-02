@@ -89,9 +89,11 @@ pub fn get_config() -> Result<Config> {
 }
 
 /// The possible runtime environment for our application.
+#[derive(PartialEq, Clone, Debug)]
 pub enum Environment {
     Local,
     Production,
+    Test,
 }
 
 impl Environment {
@@ -99,6 +101,7 @@ impl Environment {
         match self {
             Environment::Local => "local",
             Environment::Production => "production",
+            Environment::Test => "test",
         }
     }
 }
@@ -110,6 +113,7 @@ impl TryFrom<String> for Environment {
         match s.to_lowercase().as_str() {
             "local" => Ok(Self::Local),
             "production" => Ok(Self::Production),
+            "test" => Ok(Self::Test),
             other => Err(format!(
                 "{} is not a supported environment. Use either `local` or `production`.",
                 other

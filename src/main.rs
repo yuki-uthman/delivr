@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = get_config()?;
     tracing::info!("{:#?}", config);
 
-    app::serve(config).await?;
+    app::serve(&config).await?;
 
     Ok(())
 }
