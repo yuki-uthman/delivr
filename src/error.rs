@@ -14,6 +14,9 @@ pub enum Error {
 
     #[from]
     Config(config::ConfigError),
+
+    #[from]
+    Sqlx(sqlx::Error),
 }
 
 // region:    --- Custom
