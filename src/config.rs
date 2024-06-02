@@ -11,6 +11,12 @@ pub struct Config {
     pub database: Database,
 }
 
+impl Config {
+    pub fn addr(&self) -> String {
+        format!("{}:{}", self.application.host, self.application.port)
+    }
+}
+
 #[derive(serde::Deserialize, Clone, Debug)]
 pub struct Application {
     #[serde(deserialize_with = "deserialize_number_from_string")]
