@@ -1,4 +1,6 @@
+use secrecy::{ExposeSecret, Secret};
 use serde_aux::field_attributes::deserialize_number_from_string;
+use sqlx::postgres::{PgConnectOptions, PgSslMode};
 use std::convert::{TryFrom, TryInto};
 
 use crate::error::{Error, Result};
@@ -6,6 +8,7 @@ use crate::error::{Error, Result};
 #[derive(serde::Deserialize, Clone, Debug)]
 pub struct Config {
     pub application: Application,
+    pub database: Database,
 }
 
 #[derive(serde::Deserialize, Clone, Debug)]
@@ -14,6 +17,37 @@ pub struct Application {
     pub port: u16,
     pub host: String,
     pub base_url: String,
+}
+
+#[derive(serde::Deserialize, Clone, Debug)]
+pub struct Database {
+    pub host: String,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub port: u16,
+    pub username: String,
+    pub password: Secret<String>,
+    pub database_name: String,
+    pub require_ssl: bool,
+}
+
+impl Database {
+    pub fn without_db(&self) -> PgConnectOptions {
+        let ssl_mode = if self.require_ssl {
+            PgSslMode::Require
+        } else {
+            PgSslMode::Prefer
+        };
+        PgConnectOptions::new()
+            .host(&self.host)
+            .username(&self.username)
+            .password(self.password.expose_secret())
+            .port(self.port)
+            .ssl_mode(ssl_mode)
+    }
+
+    pub fn with_db(&self) -> PgConnectOptions {
+        self.without_db().database(&self.database_name)
+    }
 }
 
 pub fn get_config() -> Result<Config> {
