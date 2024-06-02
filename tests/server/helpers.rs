@@ -1,5 +1,5 @@
 use crate::error::Result;
-use delivr::app::build_router;
+use delivr::routes::build_router;
 use delivr::config::{get_config, Config};
 
 async fn start_app(config: &Config) -> Result<u16> {
