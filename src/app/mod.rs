@@ -6,8 +6,8 @@ use crate::config::Config;
 use crate::error::Result;
 use crate::routes::health;
 
-pub async fn serve(config: Config) -> Result<()> {
-    let app = Router::new()
+pub fn build_router() -> Router {
+    Router::new()
         .route("/health", get(health))
         // Add a tracing layer to all requests
         .layer(
@@ -15,13 +15,16 @@ pub async fn serve(config: Config) -> Result<()> {
                 .make_span_with(trace::DefaultMakeSpan::new())
                 .on_request(trace::DefaultOnRequest::new())
                 .on_response(trace::DefaultOnResponse::new()),
-        );
+        )
+}
 
+pub async fn serve(config: Config) -> Result<()> {
+    let router = build_router();
     let addr = format!("{}:{}", config.application.host, config.application.port);
     let listener = TcpListener::bind(addr).await?;
 
     tracing::info!("listening on {:?}", listener.local_addr()?);
-    axum::serve(listener, app).await?;
+    axum::serve(listener, router).await?;
 
     Ok(())
 }
