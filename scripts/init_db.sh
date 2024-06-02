@@ -16,8 +16,8 @@ if ! [ -x "$(command -v sqlx)" ]; then
 fi
 
 DB_HOST="${POSTGRES_HOST:=localhost}"
-DB_USER="${POSTGRES_USER:=delivr_user}"
-DB_NAME="${POSTGRES_DB:=delivr_database}"
+DB_USER="${POSTGRES_USER:=postgres}"
+DB_NAME="${POSTGRES_DB:=database}"
 DB_PASSWORD="${POSTGRES_PASSWORD:=password}"
 DB_PORT="${POSTGRES_PORT:=5432}"
 

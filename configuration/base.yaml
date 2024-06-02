@@ -4,7 +4,7 @@ application:
 database:
   host: "127.0.0.1"
   port: 5432
-  username: "delivr_user"
+  username: "postgres"
   password: "password"
-  database_name: "delivr_database"
+  database_name: "database"
   require_ssl: false
