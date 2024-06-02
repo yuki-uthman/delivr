@@ -9,7 +9,7 @@ pub async fn serve(config: &Config) -> Result<u16> {
     let listener = TcpListener::bind(config.addr()).await?;
     let port = listener.local_addr().unwrap().port();
 
-    tracing::info!("listening on {:?}", listener.local_addr()?);
+    tracing::info!("Listening on {:?}", listener.local_addr()?);
 
     // check the APP_ENVIRONMENT
     let environment: Environment = std::env::var("APP_ENVIRONMENT")
