@@ -1,4 +1,4 @@
-use axum::extract::State;
+use axum::extract::{Path, State};
 use axum::{http::StatusCode, response::IntoResponse};
 use axum::{routing::get, Router};
 use sqlx::PgPool;
@@ -13,6 +13,7 @@ pub fn build_router(pool: PgPool) -> Router {
 
     Router::new()
         .route("/health", get(health))
+        .route("/token/:code", get(token))
         // Add a tracing layer to all requests
         .layer(
             TraceLayer::new_for_http()
@@ -37,4 +38,37 @@ pub async fn health(State(state): State<AppState>) -> Result<impl IntoResponse> 
     } else {
         Err(Error::custom("Query did not return the expected result"))
     }
+}
+
+#[instrument]
+pub async fn token(
+    State(state): State<AppState>,
+    Path(code): Path<String>,
+) -> Result<impl IntoResponse> {
+    tracing::info!("token");
+
+    if code.is_empty() {
+        return Err(Error::custom("Missing code"));
+    }
+
+    let id = std::env::var("APP_ZOHO__CLIENT_ID").expect("APP_ZOHO_CLIENT_ID must be set");
+    let secret =
+        std::env::var("APP_ZOHO__CLIENT_SECRET").expect("APP_ZOHO_CLIENT_SECRET must be set");
+
+    let response = reqwest::Client::new()
+        .post("https://accounts.zoho.com/oauth/v2/token")
+        .form(&[
+            ("grant_type", "authorization_code"),
+            ("code", &code),
+            ("client_id", &id),
+            ("client_secret", &secret),
+        ])
+        .send()
+        .await?
+        .json::<serde_json::Value>()
+        .await?;
+
+    tracing::info!("{:#?}", response);
+
+    Ok(StatusCode::OK)
 }

@@ -17,6 +17,9 @@ pub enum Error {
 
     #[from]
     Sqlx(sqlx::Error),
+
+    #[from]
+    Reqwest(reqwest::Error),
 }
 
 // region:    --- Custom
