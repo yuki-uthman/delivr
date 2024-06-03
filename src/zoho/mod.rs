@@ -1,9 +1,11 @@
+use secrecy::Secret;
+
 #[derive(Debug)]
 pub struct Token {
-    pub access_token: String,
+    pub access_token: Secret<String>,
     pub api_domain: String,
     pub expires_in: i64,
-    pub refresh_token: Option<String>,
+    pub refresh_token: Option<Secret<String>>,
     pub scope: String,
     pub token_type: String,
     pub time_stamp: chrono::DateTime<chrono::Utc>,
@@ -20,10 +22,10 @@ impl From<serde_json::Value> for Token {
         };
 
         Self {
-            access_token: val["access_token"].as_str().unwrap().to_string(),
+            access_token: val["access_token"].as_str().unwrap().to_string().into(),
             api_domain: val["api_domain"].as_str().unwrap().to_string(),
             expires_in: val["expires_in"].as_i64().unwrap(),
-            refresh_token,
+            refresh_token: refresh_token.map(|s| s.into()),
             scope: val["scope"].as_str().unwrap().to_string(),
             token_type: val["token_type"].as_str().unwrap().to_string(),
             time_stamp: now,
