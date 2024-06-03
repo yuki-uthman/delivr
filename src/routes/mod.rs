@@ -75,6 +75,8 @@ pub async fn token(
     }
 
     let token = Token::from(response);
+    token.insert(&state.pool).await?;
+
     tracing::info!("{:#?}", token);
 
     Ok(StatusCode::OK)
