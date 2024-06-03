@@ -8,6 +8,7 @@ use crate::error::{Error, Result};
 pub struct Config {
     pub application: Application,
     pub database: Database,
+    pub zoho: Zoho,
 }
 
 impl Config {
@@ -60,7 +61,22 @@ impl Database {
     }
 }
 
+#[derive(serde::Deserialize, Clone, Debug)]
+pub struct Zoho {
+    pub client_id: String,
+    pub client_secret: Secret<String>,
+}
+
 pub fn get_config() -> Result<Config> {
+    let environment: Environment = std::env::var("APP_ENVIRONMENT")
+        .unwrap_or_else(|_| "local".into())
+        .try_into()
+        .map_err(Error::from)?;
+
+    if environment == Environment::Local || environment == Environment::Test {
+        dotenvy::dotenv().ok();
+    }
+
     let base_path = std::env::current_dir().expect("Failed to determine the current directory");
     let configuration_directory = base_path.join("configuration");
 

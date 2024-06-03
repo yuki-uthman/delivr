@@ -353,6 +353,7 @@ dependencies = [
  "chrono",
  "config",
  "derive_more",
+ "dotenvy",
  "log",
  "reqwest",
  "secrecy",
