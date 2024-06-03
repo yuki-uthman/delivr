@@ -25,6 +25,7 @@ sqlx = { version = "0.7", default-features = false, features = [
     "chrono",
     "json",
     "bigdecimal",
+    "migrate",
 ] }
 bigdecimal = { version = "0.3.1", features = ["serde"] }
 chrono = { version = "0.4.24", features = ["serde"] }
