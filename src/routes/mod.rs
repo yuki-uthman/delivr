@@ -40,6 +40,8 @@ pub async fn health(State(state): State<AppState>) -> Result<impl IntoResponse> 
     }
 }
 
+use crate::zoho::Token;
+
 #[instrument]
 pub async fn token(
     State(state): State<AppState>,
@@ -68,7 +70,12 @@ pub async fn token(
         .json::<serde_json::Value>()
         .await?;
 
-    tracing::info!("{:#?}", response);
+    if let Some(error) = response.get("error") {
+        return Err(Error::custom(format!("Zoho error: {error}")));
+    }
+
+    let token = Token::from(response);
+    tracing::info!("{:#?}", token);
 
     Ok(StatusCode::OK)
 }
