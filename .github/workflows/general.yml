@@ -68,8 +68,8 @@ jobs:
         run: cargo test
         env:
           APP_ENVIRONMENT: production
-          APP_ZOHO_CLIENT_ID: ${{ secrets.APP_ZOHO__CLIENT_ID }}
-          APP_ZOHO_CLIENT_SECRET: ${{ secrets.APP_ZOHO__CLIENT_SECRET }}
+          APP_ZOHO__CLIENT_ID: ${{ secrets.APP_ZOHO__CLIENT_ID }}
+          APP_ZOHO__CLIENT_SECRET: ${{ secrets.APP_ZOHO__CLIENT_SECRET }}
 
   # `fmt` container job
   fmt:
@@ -154,5 +154,5 @@ jobs:
         run: cargo install cargo-tarpaulin && cargo tarpaulin --verbose --workspace
         env:
           APP_ENVIRONMENT: production
-          APP_ZOHO_CLIENT_ID: ${{ secrets.APP_ZOHO__CLIENT_ID }}
-          APP_ZOHO_CLIENT_SECRET: ${{ secrets.APP_ZOHO__CLIENT_SECRET }}
+          APP_ZOHO__CLIENT_ID: ${{ secrets.APP_ZOHO__CLIENT_ID }}
+          APP_ZOHO__CLIENT_SECRET: ${{ secrets.APP_ZOHO__CLIENT_SECRET }}
