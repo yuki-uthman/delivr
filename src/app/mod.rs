@@ -2,7 +2,7 @@ use sqlx::PgPool;
 use tokio::net::TcpListener;
 
 use crate::config::{Config, Environment};
-use crate::error::{Result, Error};
+use crate::error::{Error, Result};
 use crate::routes::build_router;
 
 #[derive(Clone, Debug)]

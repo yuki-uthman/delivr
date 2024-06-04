@@ -1,5 +1,5 @@
-use axum::Json;
 use axum::extract::{Path, State};
+use axum::Json;
 use axum::{http::StatusCode, response::IntoResponse};
 use axum::{routing::get, Router};
 use sqlx::PgPool;
