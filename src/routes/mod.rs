@@ -8,6 +8,7 @@ use tracing::instrument;
 
 use crate::app::AppState;
 use crate::error::{Error, Result};
+use crate::database::Tokens;
 
 pub fn build_router(pool: PgPool) -> Router {
     let state = AppState { pool };
@@ -78,7 +79,9 @@ pub async fn token(
     }
 
     let token = Token::from(response);
-    token.insert(&state.pool).await?;
+
+    let tokens = Tokens { pool: &state.pool };
+    tokens.insert(&token).await?;
 
     tracing::info!("{:#?}", token);
 
