@@ -1,3 +1,4 @@
+use axum::Json;
 use axum::extract::{Path, State};
 use axum::{http::StatusCode, response::IntoResponse};
 use axum::{routing::get, Router};
@@ -14,6 +15,7 @@ pub fn build_router(pool: PgPool) -> Router {
     Router::new()
         .route("/health", get(health))
         .route("/token/:code", get(token))
+        .route("/tokens/:scope", get(get_token))
         // Add a tracing layer to all requests
         .layer(
             TraceLayer::new_for_http()
@@ -80,4 +82,43 @@ pub async fn token(
     tracing::info!("{:#?}", token);
 
     Ok(StatusCode::OK)
+}
+
+#[instrument]
+pub async fn get_token(
+    State(state): State<AppState>,
+    Path(scope): Path<String>,
+) -> Result<impl IntoResponse> {
+    tracing::info!("get token for {}", scope);
+
+    let db_pool = &state.pool;
+
+    let res = sqlx::query_as::<_, Token>(
+        r#"
+        SELECT
+            scope,
+            access_token,
+            api_domain,
+            expires_in,
+            refresh_token,
+            token_type,
+            time_stamp
+        FROM tokens
+        WHERE scope = $1
+        "#,
+    )
+    .bind(scope)
+    .fetch_one(db_pool)
+    .await;
+
+    if res.is_err() {
+        tracing::error!("{:#?}", res);
+        return Err(Error::Sqlx(res.unwrap_err()));
+    }
+
+    let token = res.unwrap();
+
+    tracing::info!("{:#?}", token);
+
+    Ok(Json(token))
 }
