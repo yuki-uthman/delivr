@@ -26,7 +26,7 @@ pub fn build_router(pool: PgPool) -> Router {
         .with_state(state)
 }
 
-#[instrument]
+#[instrument(skip(state))]
 pub async fn health(State(state): State<AppState>) -> Result<impl IntoResponse> {
     tracing::info!("health check");
 
@@ -44,7 +44,7 @@ pub async fn health(State(state): State<AppState>) -> Result<impl IntoResponse> 
 
 use crate::zoho::Token;
 
-#[instrument]
+#[instrument(skip(state))]
 pub async fn token(
     State(state): State<AppState>,
     Path(code): Path<String>,
@@ -84,7 +84,7 @@ pub async fn token(
     Ok(StatusCode::OK)
 }
 
-#[instrument]
+#[instrument(skip(state))]
 pub async fn get_token(
     State(state): State<AppState>,
     Path(scope): Path<String>,
