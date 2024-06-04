@@ -15,6 +15,7 @@ pub fn build_router(pool: PgPool) -> Router {
     Router::new()
         .route("/health", get(health))
         .route("/token/:code", get(token))
+        .route("/tokens", get(get_all_tokens))
         .route("/tokens/:scope", get(get_token))
         // Add a tracing layer to all requests
         .layer(
@@ -121,4 +122,38 @@ pub async fn get_token(
     tracing::info!("{:#?}", token);
 
     Ok(Json(token))
+}
+
+#[instrument(skip(state))]
+pub async fn get_all_tokens(State(state): State<AppState>) -> Result<impl IntoResponse> {
+    tracing::info!("get all tokens");
+
+    let db_pool = &state.pool;
+
+    let res = sqlx::query_as::<_, Token>(
+        r#"
+        SELECT
+            scope,
+            access_token,
+            api_domain,
+            expires_in,
+            refresh_token,
+            token_type,
+            time_stamp
+        FROM tokens
+        "#,
+    )
+    .fetch_all(db_pool)
+    .await;
+
+    if let Err(err) = res {
+        tracing::error!("{:#?}", err);
+        return Err(Error::Sqlx(err));
+    }
+
+    let tokens = res.unwrap();
+
+    tracing::info!("{:#?}", tokens);
+
+    Ok(Json(tokens))
 }
