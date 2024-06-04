@@ -111,9 +111,9 @@ pub async fn get_token(
     .fetch_one(db_pool)
     .await;
 
-    if res.is_err() {
-        tracing::error!("{:#?}", res);
-        return Err(Error::Sqlx(res.unwrap_err()));
+    if let Err(err) = res {
+        tracing::error!("{:#?}", err);
+        return Err(Error::Sqlx(err));
     }
 
     let token = res.unwrap();
