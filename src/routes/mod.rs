@@ -15,7 +15,7 @@ pub fn build_router(pool: PgPool) -> Router {
 
     Router::new()
         .route("/health", get(health))
-        .route("/token/:code", get(token))
+        .route("/token/:code", get(request_token))
         .route("/tokens", get(get_all_tokens))
         .route("/tokens/:scope", get(get_token))
         // Add a tracing layer to all requests
@@ -47,7 +47,7 @@ pub async fn health(State(state): State<AppState>) -> Result<impl IntoResponse> 
 use crate::zoho::Token;
 
 #[instrument(skip(state))]
-pub async fn token(
+pub async fn request_token(
     State(state): State<AppState>,
     Path(code): Path<String>,
 ) -> Result<impl IntoResponse> {
@@ -78,9 +78,9 @@ pub async fn token(
         return Err(Error::custom(format!("Zoho error: {error}")));
     }
 
-    let token = Token::from(response);
-
     let tokens = Tokens { pool: &state.pool };
+
+    let token = Token::from(response);
     tokens.insert(&token).await?;
 
     tracing::info!("{:#?}", token);
@@ -95,32 +95,8 @@ pub async fn get_token(
 ) -> Result<impl IntoResponse> {
     tracing::info!("get token for {}", scope);
 
-    let db_pool = &state.pool;
-
-    let res = sqlx::query_as::<_, Token>(
-        r#"
-        SELECT
-            scope,
-            access_token,
-            api_domain,
-            expires_in,
-            refresh_token,
-            token_type,
-            time_stamp
-        FROM tokens
-        WHERE scope = $1
-        "#,
-    )
-    .bind(scope)
-    .fetch_one(db_pool)
-    .await;
-
-    if let Err(err) = res {
-        tracing::error!("{:#?}", err);
-        return Err(Error::Sqlx(err));
-    }
-
-    let token = res.unwrap();
+    let tokens = Tokens { pool: &state.pool };
+    let token = tokens.get_by_scope(&scope).await?;
 
     tracing::info!("{:#?}", token);
 
@@ -131,30 +107,8 @@ pub async fn get_token(
 pub async fn get_all_tokens(State(state): State<AppState>) -> Result<impl IntoResponse> {
     tracing::info!("get all tokens");
 
-    let db_pool = &state.pool;
-
-    let res = sqlx::query_as::<_, Token>(
-        r#"
-        SELECT
-            scope,
-            access_token,
-            api_domain,
-            expires_in,
-            refresh_token,
-            token_type,
-            time_stamp
-        FROM tokens
-        "#,
-    )
-    .fetch_all(db_pool)
-    .await;
-
-    if let Err(err) = res {
-        tracing::error!("{:#?}", err);
-        return Err(Error::Sqlx(err));
-    }
-
-    let tokens = res.unwrap();
+    let tokens = Tokens { pool: &state.pool };
+    let tokens = tokens.get_all().await?;
 
     tracing::info!("{:#?}", tokens);
 

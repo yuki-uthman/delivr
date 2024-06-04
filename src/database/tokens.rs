@@ -1,7 +1,7 @@
 use crate::error::{Error, Result};
 use crate::zoho::Token;
 use secrecy::ExposeSecret;
-use sqlx::PgPool;
+use sqlx::{PgPool};
 
 pub struct Tokens<'a> {
     pub pool: &'a PgPool,
@@ -36,4 +36,46 @@ impl<'a> Tokens<'a> {
 
         Ok(())
     }
+
+    pub async fn get_by_scope(&self, scope: &str) -> Result<Token> {
+        let query = r#"
+            SELECT access_token, api_domain, expires_in, refresh_token, scope, token_type, time_stamp
+            FROM tokens
+            WHERE scope = $1
+        "#;
+
+        let mut conn = self.pool.acquire().await?;
+        let res = sqlx::query_as::<_, Token>(query)
+            .bind(scope)
+            .fetch_optional(&mut *conn)
+            .await
+            .map_err(Error::from)?;
+
+        if res.is_none() {
+            tracing::error!("No token found: {scope}");
+            return Err(Error::custom(format!("No token found: {scope}")));
+        }
+
+        Ok(res.unwrap())
+    }
+
+    pub async fn get_all(&self) -> Result<Vec<Token>> {
+        let query = r#"
+            SELECT access_token, api_domain, expires_in, refresh_token, scope, token_type, time_stamp
+            FROM tokens
+        "#;
+
+        let mut conn = self.pool.acquire().await?;
+        let res = sqlx::query_as::<_, Token>(query)
+            .fetch_all(&mut *conn)
+            .await;
+
+        if let Err(err) = res {
+            tracing::error!("{:#?}", err);
+            return Err(Error::Sqlx(err));
+        }
+
+        Ok(res.unwrap())
+    }
+
 }

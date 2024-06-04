@@ -1,8 +1,6 @@
 use secrecy::{ExposeSecret, Secret};
 use serde::{ser::SerializeStruct, Serialize};
-use sqlx::{postgres::PgRow, FromRow, PgPool, Row};
-
-use crate::error::{Error, Result};
+use sqlx::{postgres::PgRow, FromRow, Row};
 
 #[derive(Debug)]
 pub struct Token {
@@ -70,36 +68,5 @@ impl From<serde_json::Value> for Token {
             token_type: val["token_type"].as_str().unwrap().to_string(),
             time_stamp: now,
         }
-    }
-}
-
-impl Token {
-    pub async fn insert(&self, pool: &PgPool) -> Result<()> {
-        let query = r#"
-            INSERT INTO tokens (access_token, api_domain, expires_in, refresh_token, scope, token_type, time_stamp)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-        "#;
-
-        let access_token = self.access_token.expose_secret();
-        let refresh_token = self.refresh_token.as_ref().map(|rt| rt.expose_secret());
-
-        let mut conn = pool.acquire().await?;
-        let res = sqlx::query(query)
-            .bind(access_token)
-            .bind(&self.api_domain)
-            .bind(self.expires_in)
-            .bind(refresh_token)
-            .bind(&self.scope)
-            .bind(&self.token_type)
-            .bind(self.time_stamp)
-            .execute(&mut *conn)
-            .await
-            .map_err(Error::from)?;
-
-        if res.rows_affected() != 1 {
-            return Err(Error::custom("Failed to insert token"));
-        }
-
-        Ok(())
     }
 }
