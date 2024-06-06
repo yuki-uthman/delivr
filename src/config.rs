@@ -1,4 +1,5 @@
 use secrecy::{ExposeSecret, Secret};
+use serde::Deserialize;
 use serde_aux::field_attributes::deserialize_number_from_string;
 use std::convert::{TryFrom, TryInto};
 
@@ -7,6 +8,7 @@ use crate::error::{Error, Result};
 #[derive(serde::Deserialize, Clone, Debug)]
 pub struct Config {
     pub application: Application,
+    pub environment: Environment,
     pub database: Database,
     pub zoho: Zoho,
 }
@@ -79,14 +81,6 @@ pub fn get_config() -> Result<Config> {
 
     let base_path = std::env::current_dir().expect("Failed to determine the current directory");
     let configuration_directory = base_path.join("configuration");
-
-    // Detect the running environment.
-    // Default to `local` if unspecified.
-    let environment: Environment = std::env::var("APP_ENVIRONMENT")
-        .unwrap_or_else(|_| "local".into())
-        .try_into()
-        .expect("Failed to parse APP_ENVIRONMENT.");
-
     let environment_filename = format!("{}.yaml", environment.as_str());
 
     let config = config::Config::builder()
@@ -105,11 +99,14 @@ pub fn get_config() -> Result<Config> {
         )
         .build()?;
 
-    config.try_deserialize::<Config>().map_err(Error::from)
+    let mut config = config.try_deserialize::<Config>().map_err(Error::from)?;
+    config.environment = environment;
+
+    Ok(config)
 }
 
 /// The possible runtime environment for our application.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Deserialize)]
 pub enum Environment {
     Local,
     Production,
