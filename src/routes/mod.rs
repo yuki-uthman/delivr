@@ -2,13 +2,14 @@ use axum::extract::{Path, State};
 use axum::Json;
 use axum::{http::StatusCode, response::IntoResponse};
 use axum::{routing::get, Router};
+use secrecy::ExposeSecret;
 use sqlx::PgPool;
 use tower_http::trace::{self, TraceLayer};
 use tracing::instrument;
 
 use crate::app::AppState;
-use crate::error::{Error, Result};
 use crate::database::Tokens;
+use crate::error::{Error, Result};
 
 pub fn build_router(pool: PgPool) -> Router {
     let state = AppState { pool };
@@ -18,6 +19,7 @@ pub fn build_router(pool: PgPool) -> Router {
         .route("/token/:code", get(request_token))
         .route("/tokens", get(get_all_tokens))
         .route("/tokens/:scope", get(get_token))
+        .route("/invoices", get(get_all_invoices))
         // Add a tracing layer to all requests
         .layer(
             TraceLayer::new_for_http()
@@ -118,4 +120,44 @@ pub async fn get_all_tokens(State(state): State<AppState>) -> Result<impl IntoRe
     tracing::info!("{:#?}", tokens);
 
     Ok(Json(tokens))
+}
+
+#[instrument(skip(state))]
+pub async fn get_all_invoices(State(state): State<AppState>) -> Result<impl IntoResponse> {
+    tracing::info!("get all invoices");
+    let client = reqwest::Client::new();
+
+    let tokens = Tokens { pool: &state.pool };
+    let token = tokens
+        .get_by_scope("ZohoBooks.fullaccess.all")
+        .await?
+        .ok_or(Error::custom("No token found"))?;
+
+    let res = client
+        .get("https://www.zohoapis.com/books/v3/invoices")
+        .header(
+            "Authorization",
+            format!("Zoho-oauthtoken {}", token.access_token.expose_secret()),
+        )
+        .query(&[("organization_id", &String::from("820117212"))])
+        .send()
+        .await;
+
+    let res = match res {
+        Ok(res) => res.json::<serde_json::Value>().await,
+        Err(err) => {
+            tracing::error!("{err:#?}");
+            return Err(Error::from(err));
+        }
+    };
+
+    let value = match res {
+        Ok(res) => res,
+        Err(err) => {
+            tracing::error!("{err:#?}");
+            return Err(Error::from(err));
+        }
+    };
+
+    Ok(Json(value))
 }
