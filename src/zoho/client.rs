@@ -1,8 +1,8 @@
 use secrecy::{ExposeSecret, Secret};
 
+use crate::config::Config;
 use crate::error::{Error, Result};
 use crate::zoho::Token;
-use crate::config::Config;
 
 #[derive(Debug, Clone)]
 pub struct Client {
@@ -73,7 +73,8 @@ impl Client {
 
     pub async fn get_all_invoices(&self, token: &Token) -> Result<serde_json::Value> {
         tracing::info!("--> Request to Zoho");
-        let res = self.client
+        let res = self
+            .client
             .get("https://www.zohoapis.com/books/v3/invoices")
             .header(
                 "Authorization",

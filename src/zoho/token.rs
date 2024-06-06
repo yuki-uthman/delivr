@@ -76,4 +76,3 @@ impl From<serde_json::Value> for Token {
         }
     }
 }
-
