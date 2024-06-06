@@ -101,7 +101,7 @@ pub async fn get_all_tokens(State(state): State<AppState>) -> Result<impl IntoRe
 
 #[instrument(skip(state))]
 pub async fn get_all_invoices(State(state): State<AppState>) -> Result<impl IntoResponse> {
-    tracing::info!("get all invoices");
+    tracing::info!("--> Request");
 
     let tokens = Tokens { pool: &state.pool };
     let mut token = tokens
@@ -123,5 +123,6 @@ pub async fn get_all_invoices(State(state): State<AppState>) -> Result<impl Into
 
     let value = client.get_all_invoices(&token).await?;
 
+    tracing::info!("<-- Response: 200");
     Ok(Json(value))
 }
