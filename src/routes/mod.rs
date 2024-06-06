@@ -8,11 +8,16 @@ use tower_http::trace::{self, TraceLayer};
 use tracing::instrument;
 
 use crate::app::AppState;
+use crate::config::Config;
 use crate::database::Tokens;
 use crate::error::{Error, Result};
 
-pub fn build_router(pool: PgPool) -> Router {
-    let state = AppState { pool };
+pub async fn build_router(config: &Config) -> Router {
+    let pool = PgPool::connect(&config.database.connection_string())
+        .await
+        .unwrap();
+    let zoho = config.zoho.clone();
+    let state = AppState { pool, zoho };
 
     Router::new()
         .route("/health", get(health))
@@ -59,9 +64,8 @@ pub async fn request_token(
         return Err(Error::custom("Missing code"));
     }
 
-    let id = std::env::var("APP_ZOHO__CLIENT_ID").expect("APP_ZOHO_CLIENT_ID must be set");
-    let secret =
-        std::env::var("APP_ZOHO__CLIENT_SECRET").expect("APP_ZOHO_CLIENT_SECRET must be set");
+    let id = &state.zoho.client_id;
+    let secret = &state.zoho.client_secret.expose_secret();
 
     let response = reqwest::Client::new()
         .post("https://accounts.zoho.com/oauth/v2/token")
@@ -136,9 +140,8 @@ pub async fn get_all_invoices(State(state): State<AppState>) -> Result<impl Into
     // check if token is still valid
     // if not, refresh it
     if token.is_expired() {
-        let id = std::env::var("APP_ZOHO__CLIENT_ID").expect("APP_ZOHO_CLIENT_ID must be set");
-        let secret =
-            std::env::var("APP_ZOHO__CLIENT_SECRET").expect("APP_ZOHO_CLIENT_SECRET must be set");
+        let id = &state.zoho.client_id;
+        let secret = &state.zoho.client_secret.expose_secret();
 
         tracing::info!("Token is expired, refreshing token...");
 
