@@ -81,7 +81,12 @@ pub async fn request_token(
     let tokens = Tokens { pool: &state.pool };
 
     let token = Token::from(response);
-    tokens.insert(&token).await?;
+    if let Some(token) = tokens.get_by_scope(&token.scope).await? {
+        tracing::info!("token already exists, overwriting");
+        tokens.update(&token).await?;
+    } else {
+        tokens.insert(&token).await?;
+    }
 
     tracing::info!("{:#?}", token);
 
