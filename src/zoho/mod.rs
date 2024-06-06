@@ -13,6 +13,12 @@ pub struct Token {
     pub time_stamp: chrono::DateTime<chrono::Utc>,
 }
 
+impl Token {
+    pub fn is_expired(&self) -> bool {
+        self.time_stamp + chrono::Duration::seconds(self.expires_in) < chrono::Utc::now()
+    }
+}
+
 impl Serialize for Token {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where

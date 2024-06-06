@@ -128,10 +128,40 @@ pub async fn get_all_invoices(State(state): State<AppState>) -> Result<impl Into
     let client = reqwest::Client::new();
 
     let tokens = Tokens { pool: &state.pool };
-    let token = tokens
+    let mut token = tokens
         .get_by_scope("ZohoBooks.fullaccess.all")
         .await?
         .ok_or(Error::custom("No token found"))?;
+
+    // check if token is still valid
+    // if not, refresh it
+    if token.is_expired() {
+        let id = std::env::var("APP_ZOHO__CLIENT_ID").expect("APP_ZOHO_CLIENT_ID must be set");
+        let secret =
+            std::env::var("APP_ZOHO__CLIENT_SECRET").expect("APP_ZOHO_CLIENT_SECRET must be set");
+
+        tracing::info!("Token is expired, refreshing token...");
+
+        let refreshed_token = token.refresh_token.as_ref().unwrap().clone();
+        let res = reqwest::Client::new()
+            .post("https://accounts.zoho.com/oauth/v2/token")
+            .form(&[
+                ("grant_type", "refresh_token"),
+                ("refresh_token", &refreshed_token.expose_secret()),
+                ("client_id", &id),
+                ("client_secret", &secret),
+            ])
+            .send()
+            .await?
+            .json::<serde_json::Value>()
+            .await?;
+
+        token = Token::from(res);
+        token.refresh_token = Some(refreshed_token.clone());
+        tokens.update(&token).await?;
+
+        tracing::info!("Token has been refreshed");
+    }
 
     let res = client
         .get("https://www.zohoapis.com/books/v3/invoices")
