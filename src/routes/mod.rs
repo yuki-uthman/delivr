@@ -176,8 +176,19 @@ pub async fn get_all_invoices(State(state): State<AppState>) -> Result<impl Into
         .send()
         .await;
 
+    println!("{res:#?}");
+
     let res = match res {
-        Ok(res) => res.json::<serde_json::Value>().await,
+        Ok(res) => {
+            if res.status().is_success() {
+                res.json::<serde_json::Value>().await
+            } else {
+                let res = res.json::<serde_json::Value>().await;
+                let msg = res.unwrap()["message"].as_str().unwrap().to_string();
+                return Err(Error::custom(msg));
+            }
+
+        }
         Err(err) => {
             tracing::error!("{err:#?}");
             return Err(Error::from(err));
