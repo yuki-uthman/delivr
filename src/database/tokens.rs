@@ -1,13 +1,32 @@
 use crate::error::{Error, Result};
 use crate::zoho::Token;
 use secrecy::ExposeSecret;
-use sqlx::{PgPool};
+use sqlx::{PgPool, Row};
 
 pub struct Tokens<'a> {
     pub pool: &'a PgPool,
 }
 
 impl<'a> Tokens<'a> {
+    pub async fn contains_scope(&self, scope: &str) -> Result<bool> {
+        let query = r#"
+            SELECT EXISTS (
+                SELECT 1
+                FROM tokens
+                WHERE scope = $1
+            )
+        "#;
+
+        let mut conn = self.pool.acquire().await?;
+        let res = sqlx::query(query)
+            .bind(scope)
+            .fetch_one(&mut *conn)
+            .await
+            .map_err(Error::from)?;
+
+        Ok(res.get::<bool, _>(0))
+    }
+
     pub async fn insert(&self, token: &Token) -> Result<()> {
         let query = r#"
             INSERT INTO tokens (access_token, api_domain, expires_in, refresh_token, scope, token_type, time_stamp)

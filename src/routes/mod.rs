@@ -46,12 +46,12 @@ pub async fn health(State(state): State<AppState>) -> Result<impl IntoResponse> 
 
 use crate::zoho::Token;
 
-#[instrument(skip(state))]
+#[instrument(skip(state, code))]
 pub async fn request_token(
     State(state): State<AppState>,
     Path(code): Path<String>,
 ) -> Result<impl IntoResponse> {
-    tracing::info!("token");
+    tracing::info!("request token");
 
     if code.is_empty() {
         return Err(Error::custom("Missing code"));
@@ -81,8 +81,8 @@ pub async fn request_token(
     let tokens = Tokens { pool: &state.pool };
 
     let token = Token::from(response);
-    if let Some(token) = tokens.get_by_scope(&token.scope).await? {
-        tracing::info!("token already exists, overwriting");
+    if tokens.contains_scope(&token.scope).await? {
+        tracing::warn!("token already exists, replacing the existing token");
         tokens.update(&token).await?;
     } else {
         tokens.insert(&token).await?;
