@@ -20,6 +20,9 @@ pub enum Error {
 
     #[from]
     Reqwest(reqwest::Error),
+
+    #[from]
+    Chrono(chrono::ParseError),
 }
 
 // region:    --- Custom

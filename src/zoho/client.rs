@@ -2,7 +2,7 @@ use secrecy::{ExposeSecret, Secret};
 
 use crate::config::Config;
 use crate::error::{Error, Result};
-use crate::zoho::Token;
+use crate::zoho::{Query, QueryBuilder, Token};
 
 #[derive(Debug, Clone)]
 pub struct Client {
@@ -73,6 +73,12 @@ impl Client {
 
     pub async fn get_all_invoices(&self, token: &Token) -> Result<serde_json::Value> {
         tracing::info!("--> Request to Zoho");
+
+        let query = Query::builder()
+            .organization_id("820117212")
+            .date("2024-05-27")?
+            .build()?;
+
         let res = self
             .client
             .get("https://www.zohoapis.com/books/v3/invoices")
@@ -80,7 +86,7 @@ impl Client {
                 "Authorization",
                 format!("Zoho-oauthtoken {}", token.access_token.expose_secret()),
             )
-            .query(&[("organization_id", &String::from("820117212"))])
+            .query(&query)
             .send()
             .await;
 
