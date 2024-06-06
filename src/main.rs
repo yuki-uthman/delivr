@@ -16,6 +16,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     set_global_default(subscriber).unwrap();
 
+    // check app environment
+    if std::env::var("APP_ENVIRONMENT").is_err() {
+        std::env::set_var("APP_ENVIRONMENT", "local");
+    }
+
     let config = get_config()?;
     tracing::info!("{:#?}", config);
 
