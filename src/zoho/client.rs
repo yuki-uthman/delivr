@@ -2,8 +2,7 @@ use secrecy::{ExposeSecret, Secret};
 use tracing::instrument;
 
 use crate::config::Config;
-use crate::error::{Error, Result};
-use crate::zoho::{Query, Token};
+use crate::zoho::{Error, Query, Result, Token};
 
 #[derive(Debug, Clone)]
 pub struct Client {
@@ -25,6 +24,7 @@ impl Client {
     }
 
     pub async fn request_token(&self, code: &str) -> Result<Token> {
+        tracing::info!("--> Zoho");
         let response = self
             .client
             .post("https://accounts.zoho.com/oauth/v2/token")
@@ -40,13 +40,15 @@ impl Client {
             .await?;
 
         if let Some(error) = response.get("error") {
-            return Err(Error::custom(format!("{error}")));
+            return Err(Error::response(format!("{error}")));
         }
 
+        tracing::info!("<-- Zoho 200");
         Ok(response.into())
     }
 
     pub async fn refresh_token(&self, token: &Token) -> Result<Token> {
+        tracing::info!("--> Zoho");
         let refresh_token = token.refresh_token.as_ref().unwrap();
         let response = self
             .client
@@ -63,12 +65,13 @@ impl Client {
             .await?;
 
         if let Some(error) = response.get("error") {
-            return Err(Error::custom(format!("{error}")));
+            return Err(Error::response(format!("{error}")));
         }
 
         let mut token = Token::from(response);
         token.refresh_token = Some(refresh_token.clone());
 
+        tracing::info!("<-- Zoho 200");
         Ok(token)
     }
 
@@ -78,7 +81,7 @@ impl Client {
         token: &Token,
         query: &'a Query<'a>,
     ) -> Result<serde_json::Value> {
-        tracing::info!("--> Request to Zoho");
+        tracing::info!("--> Zoho");
 
         let res = self
             .client
@@ -94,12 +97,12 @@ impl Client {
         let res = match res {
             Ok(res) => {
                 if res.status().is_success() {
-                    tracing::info!("<-- Response from Zoho: {}", res.status());
+                    tracing::info!("<-- Zoho: {}", res.status());
                     res.json::<serde_json::Value>().await
                 } else {
                     let res = res.json::<serde_json::Value>().await;
                     let msg = res.unwrap()["message"].as_str().unwrap().to_string();
-                    return Err(Error::custom(msg));
+                    return Err(Error::response(msg));
                 }
             }
             Err(err) => {
@@ -126,7 +129,7 @@ impl Client {
         id: &'a str,
         query: &'a Query<'a>,
     ) -> Result<serde_json::Value> {
-        tracing::info!("--> Request Invoice: {}", id);
+        tracing::info!("--> Zoho");
 
         let res = self
             .client
@@ -142,13 +145,11 @@ impl Client {
         let res = match res {
             Ok(res) => {
                 if res.status().is_success() {
-                    tracing::info!("<-- Response from Zoho: {}", res.status());
                     res.json::<serde_json::Value>().await
-
                 } else {
                     let res = res.json::<serde_json::Value>().await;
                     let msg = res.unwrap()["message"].as_str().unwrap().to_string();
-                    return Err(Error::custom(msg));
+                    return Err(Error::response(msg));
                 }
             }
             Err(err) => {
@@ -164,13 +165,14 @@ impl Client {
                 } else {
                     return Err(Error::custom("Invoice not found in the response"));
                 }
-            },
+            }
             Err(err) => {
                 tracing::error!("{err:#?}");
                 return Err(Error::from(err));
             }
         };
 
+        tracing::info!("<-- Zoho 200");
         Ok(value)
     }
 }

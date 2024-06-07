@@ -9,3 +9,6 @@ pub use query::{Query, QueryBuilder};
 
 mod invoice;
 pub use invoice::*;
+
+mod error;
+pub use error::{Error, Result};

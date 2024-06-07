@@ -19,8 +19,8 @@ pub async fn build_router(config: &Config) -> Result<Router> {
         .route("/token/:code", get(request_token))
         .route("/tokens", get(get_all_tokens))
         .route("/tokens/:scope", get(get_token))
-        .route("/invoices", get(get_invoices_by_date))
-        .route("/invoice/:id", get(get_invoice))
+        .route("/invoices", get(invoices_by_date))
+        .route("/invoice/:id", get(invoice))
         // Add a tracing layer to all requests
         .layer(
             TraceLayer::new_for_http()
@@ -52,7 +52,7 @@ pub async fn request_token(
     State(state): State<AppState>,
     Path(code): Path<String>,
 ) -> Result<impl IntoResponse> {
-    tracing::info!("request token");
+    tracing::info!("-->");
 
     if code.is_empty() {
         return Err(Error::custom("Missing code"));
@@ -69,8 +69,8 @@ pub async fn request_token(
         tokens.insert(&token).await?;
     }
 
-    tracing::info!("{:#?}", token);
 
+    tracing::info!("<-- 200");
     Ok(StatusCode::OK)
 }
 
@@ -79,13 +79,13 @@ pub async fn get_token(
     State(state): State<AppState>,
     Path(scope): Path<String>,
 ) -> Result<impl IntoResponse> {
-    tracing::info!("get token for {}", scope);
+    tracing::info!("-->");
 
     let tokens = Tokens { pool: &state.pool };
     let token = tokens.get_by_scope(&scope).await?;
 
-    tracing::info!("{:#?}", token);
 
+    tracing::info!("<-- 200");
     Ok(Json(token))
 }
 
@@ -113,11 +113,11 @@ struct InvoiceQuery {
         organization = %query.organization_id,
         date = %query.date
     ))]
-pub async fn get_invoices_by_date(
+pub async fn invoices_by_date(
     State(state): State<AppState>,
     query: QueryExtractor<InvoiceQuery>,
 ) -> Result<impl IntoResponse> {
-    tracing::info!("--> Request");
+    tracing::info!("-->");
 
     let query = query.clone();
 
@@ -151,17 +151,19 @@ struct OrgaznizationQuery {
     organization_id: String,
 }
 
-#[instrument(skip(state, id, query))]
-pub async fn get_invoice(
+#[instrument(
+    name = "invoice"
+    skip(state, id, query)
+    fields(
+        organization = %query.organization_id,
+        id = %id
+    ))]
+pub async fn invoice(
     State(state): State<AppState>,
     Path(id): Path<String>,
     QueryExtractor(query): QueryExtractor<OrgaznizationQuery>,
 ) -> Result<impl IntoResponse> {
-    tracing::info!(
-        "--> Request: id={} organization={}",
-        id,
-        query.organization_id
-    );
+    tracing::info!("-->");
     let tokens = Tokens { pool: &state.pool };
     let mut token = tokens
         .get_by_scope("ZohoBooks.fullaccess.all")
@@ -184,8 +186,8 @@ pub async fn get_invoice(
         .build()?;
 
     let value = client.get_invoice(&token, &id, &query).await?;
-    tracing::info!("{:#?}", value);
+    // tracing::info!("{:#?}", value);
 
-    tracing::info!("<-- Response: 200");
+    tracing::info!("<-- 200");
     Ok(Json(value))
 }

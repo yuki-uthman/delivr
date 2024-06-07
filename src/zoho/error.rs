@@ -1,34 +1,16 @@
-use axum::{http::StatusCode, response::IntoResponse};
 use derive_more::From;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug, From)]
 pub enum Error {
+    Response(String),
+
     #[from]
     Custom(String),
 
     #[from]
-    Zoho(crate::zoho::Error),
-
-    // -- Externals
-    #[from]
-    Io(std::io::Error), // as example
-
-    #[from]
-    Config(config::ConfigError),
-
-    #[from]
-    Sqlx(sqlx::Error),
-
-    #[from]
     Reqwest(reqwest::Error),
-
-    #[from]
-    Chrono(chrono::ParseError),
-
-    #[from]
-    SerdeJson(serde_json::Error),
 }
 
 // region:    --- Custom
@@ -37,20 +19,16 @@ impl Error {
     pub fn custom(val: impl std::fmt::Display) -> Self {
         Self::Custom(val.to_string())
     }
+
+    pub fn response(val: impl std::fmt::Display) -> Self {
+        tracing::error!("<-- Zoho: {val}");
+        Self::Response(val.to_string())
+    }
 }
 
 impl From<&str> for Error {
     fn from(val: &str) -> Self {
         Self::Custom(val.to_string())
-    }
-}
-
-impl IntoResponse for Error {
-    fn into_response(self) -> axum::response::Response {
-        tracing::error!("{self:?}");
-        tracing::error!("<-- 500");
-
-        (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
     }
 }
 
@@ -67,3 +45,4 @@ impl core::fmt::Display for Error {
 impl std::error::Error for Error {}
 
 // endregion: --- Error Boilerplate
+
