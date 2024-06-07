@@ -6,3 +6,6 @@ pub use client::Client;
 
 mod query;
 pub use query::{Query, QueryBuilder};
+
+mod invoice;
+pub use invoice::*;

@@ -23,6 +23,9 @@ pub enum Error {
 
     #[from]
     Chrono(chrono::ParseError),
+
+    #[from]
+    SerdeJson(serde_json::Error),
 }
 
 // region:    --- Custom
