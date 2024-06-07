@@ -19,7 +19,8 @@ pub async fn build_router(config: &Config) -> Result<Router> {
         .route("/token/:code", get(request_token))
         .route("/tokens", get(get_all_tokens))
         .route("/tokens/:scope", get(get_token))
-        .route("/invoices", get(get_all_invoices))
+        .route("/invoices", get(get_invoices_by_date))
+        .route("/invoice/:id", get(get_invoice))
         // Add a tracing layer to all requests
         .layer(
             TraceLayer::new_for_http()
@@ -107,7 +108,7 @@ struct InvoiceQuery {
 }
 
 #[instrument(skip(state, query))]
-pub async fn get_all_invoices(
+pub async fn get_invoices_by_date(
     State(state): State<AppState>,
     query: QueryExtractor<InvoiceQuery>,
 ) -> Result<impl IntoResponse> {
@@ -139,6 +140,45 @@ pub async fn get_all_invoices(
     }
 
     let value = client.get_all_invoices(&token, &query).await?;
+
+#[derive(serde::Deserialize, Debug, Clone)]
+struct OrgaznizationQuery {
+    organization_id: String,
+}
+
+#[instrument(skip(state, id, query))]
+pub async fn get_invoice(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    QueryExtractor(query): QueryExtractor<OrgaznizationQuery>,
+) -> Result<impl IntoResponse> {
+    tracing::info!(
+        "--> Request: id={} organization={}",
+        id,
+        query.organization_id
+    );
+    let tokens = Tokens { pool: &state.pool };
+    let mut token = tokens
+        .get_by_scope("ZohoBooks.fullaccess.all")
+        .await?
+        .ok_or(Error::custom("No token found"))?;
+
+    let client = &state.client;
+    if token.is_expired() {
+        tracing::info!("Token is expired, refreshing token...");
+
+        token = client.refresh_token(&token).await.map_err(Error::from)?;
+
+        tokens.update(&token).await?;
+
+        tracing::info!("Token has been refreshed");
+    }
+
+    let query = Query::builder()
+        .organization_id(&query.organization_id)
+        .build()?;
+
+    let value = client.get_invoice(&token, &id, &query).await?;
     tracing::info!("{:#?}", value);
 
     tracing::info!("<-- Response: 200");

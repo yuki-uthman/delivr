@@ -116,4 +116,58 @@ impl Client {
 
         Ok(value)
     }
+
+    pub async fn get_invoice<'a>(
+        &self,
+        token: &Token,
+        id: &'a str,
+        query: &'a Query<'a>,
+    ) -> Result<serde_json::Value> {
+        tracing::info!("--> Request to Zoho");
+
+        let res = self
+            .client
+            .get(format!("https://www.zohoapis.com/books/v3/invoices/{id}"))
+            .header(
+                "Authorization",
+                format!("Zoho-oauthtoken {}", token.access_token.expose_secret()),
+            )
+            .query(&query)
+            .send()
+            .await;
+
+        let res = match res {
+            Ok(res) => {
+                if res.status().is_success() {
+                    tracing::info!("<-- Response from Zoho: {}", res.status());
+                    res.json::<serde_json::Value>().await
+
+                } else {
+                    let res = res.json::<serde_json::Value>().await;
+                    let msg = res.unwrap()["message"].as_str().unwrap().to_string();
+                    return Err(Error::custom(msg));
+                }
+            }
+            Err(err) => {
+                tracing::error!("{err:#?}");
+                return Err(Error::from(err));
+            }
+        };
+
+        let value = match res {
+            Ok(res) => {
+                if res.get("invoice").is_some() {
+                    res.get("invoice").unwrap().clone()
+                } else {
+                    return Err(Error::custom("Invoice not found in the response"));
+                }
+            },
+            Err(err) => {
+                tracing::error!("{err:#?}");
+                return Err(Error::from(err));
+            }
+        };
+
+        Ok(value)
+    }
 }
