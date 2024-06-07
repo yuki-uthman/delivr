@@ -31,7 +31,7 @@ impl Client {
                 ("grant_type", "authorization_code"),
                 ("code", code),
                 ("client_id", &self.client_id),
-                ("client_secret", &self.client_secret.expose_secret()),
+                ("client_secret", self.client_secret.expose_secret()),
             ])
             .send()
             .await?
@@ -52,9 +52,9 @@ impl Client {
             .post("https://accounts.zoho.com/oauth/v2/token")
             .form(&[
                 ("grant_type", "refresh_token"),
-                ("refresh_token", &refresh_token.expose_secret()),
+                ("refresh_token", refresh_token.expose_secret()),
                 ("client_id", &self.client_id),
-                ("client_secret", &self.client_secret.expose_secret()),
+                ("client_secret", self.client_secret.expose_secret()),
             ])
             .send()
             .await?

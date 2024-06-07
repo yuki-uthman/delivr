@@ -9,7 +9,7 @@ use crate::app::AppState;
 use crate::config::Config;
 use crate::database::Tokens;
 use crate::error::{Error, Result};
-use crate::zoho::{Query, QueryBuilder};
+use crate::zoho::Query;
 
 pub async fn build_router(config: &Config) -> Result<Router> {
     let state = AppState::build_state(config).await?;
