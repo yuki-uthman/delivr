@@ -1,4 +1,5 @@
 use secrecy::{ExposeSecret, Secret};
+use tracing::instrument;
 
 use crate::config::Config;
 use crate::error::{Error, Result};
@@ -71,7 +72,8 @@ impl Client {
         Ok(token)
     }
 
-    pub async fn get_all_invoices<'a>(
+    #[instrument(skip(self, token, query))]
+    pub async fn get_invoices_with_query<'a>(
         &self,
         token: &Token,
         query: &'a Query<'a>,
@@ -117,13 +119,14 @@ impl Client {
         Ok(value)
     }
 
+    #[instrument(skip(self, token, id, query))]
     pub async fn get_invoice<'a>(
         &self,
         token: &Token,
         id: &'a str,
         query: &'a Query<'a>,
     ) -> Result<serde_json::Value> {
-        tracing::info!("--> Request to Zoho");
+        tracing::info!("--> Request Invoice: {}", id);
 
         let res = self
             .client

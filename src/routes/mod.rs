@@ -107,12 +107,17 @@ struct InvoiceQuery {
     date: String,
 }
 
-#[instrument(skip(state, query))]
+#[instrument(
+    skip(state, query)
+    fields(
+        organization = %query.organization_id,
+        date = %query.date
+    ))]
 pub async fn get_invoices_by_date(
     State(state): State<AppState>,
     query: QueryExtractor<InvoiceQuery>,
 ) -> Result<impl IntoResponse> {
-    tracing::info!("--> Request: {} {}", query.organization_id, query.date);
+    tracing::info!("--> Request");
 
     let query = query.clone();
 
@@ -139,7 +144,7 @@ pub async fn get_invoices_by_date(
         tracing::info!("Token has been refreshed");
     }
 
-    let value = client.get_all_invoices(&token, &query).await?;
+    let value = client.get_invoices_with_query(&token, &query).await?;
 
 #[derive(serde::Deserialize, Debug, Clone)]
 struct OrgaznizationQuery {

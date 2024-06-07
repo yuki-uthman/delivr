@@ -3,10 +3,10 @@ use serde::Serialize;
 
 use crate::error::{Error, Result};
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Query<'a> {
-    organization_id: &'a str,
-    date: Option<NaiveDate>,
+    pub organization_id: &'a str,
+    pub date: Option<NaiveDate>,
 }
 
 #[derive(Default)]
