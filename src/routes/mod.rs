@@ -1,4 +1,4 @@
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query as QueryExtractor, State};
 use axum::Json;
 use axum::{http::StatusCode, response::IntoResponse};
 use axum::{routing::get, Router};
@@ -9,6 +9,7 @@ use crate::app::AppState;
 use crate::config::Config;
 use crate::database::Tokens;
 use crate::error::{Error, Result};
+use crate::zoho::{QueryBuilder, Query};
 
 pub async fn build_router(config: &Config) -> Result<Router> {
     let state = AppState::build_state(config).await?;
@@ -99,9 +100,25 @@ pub async fn get_all_tokens(State(state): State<AppState>) -> Result<impl IntoRe
     Ok(Json(tokens))
 }
 
-#[instrument(skip(state))]
-pub async fn get_all_invoices(State(state): State<AppState>) -> Result<impl IntoResponse> {
-    tracing::info!("--> Request");
+#[derive(serde::Deserialize, Debug, Clone)]
+struct InvoiceQuery {
+    organization_id: String,
+    date: String,
+}
+
+#[instrument(skip(state, query))]
+pub async fn get_all_invoices(
+    State(state): State<AppState>,
+    query: QueryExtractor<InvoiceQuery>,
+) -> Result<impl IntoResponse> {
+    tracing::info!("--> Request: {} {}", query.organization_id, query.date);
+
+    let query = query.clone();
+
+    let query = Query::builder()
+        .organization_id(&query.organization_id)
+        .date(&query.date)?
+        .build()?;
 
     let tokens = Tokens { pool: &state.pool };
     let mut token = tokens
@@ -121,7 +138,8 @@ pub async fn get_all_invoices(State(state): State<AppState>) -> Result<impl Into
         tracing::info!("Token has been refreshed");
     }
 
-    let value = client.get_all_invoices(&token).await?;
+    let value = client.get_all_invoices(&token, &query).await?;
+    tracing::info!("{:#?}", value);
 
     tracing::info!("<-- Response: 200");
     Ok(Json(value))

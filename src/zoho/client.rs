@@ -2,7 +2,7 @@ use secrecy::{ExposeSecret, Secret};
 
 use crate::config::Config;
 use crate::error::{Error, Result};
-use crate::zoho::{Query, QueryBuilder, Token};
+use crate::zoho::{Query, Token};
 
 #[derive(Debug, Clone)]
 pub struct Client {
@@ -71,13 +71,8 @@ impl Client {
         Ok(token)
     }
 
-    pub async fn get_all_invoices(&self, token: &Token) -> Result<serde_json::Value> {
+    pub async fn get_all_invoices<'a>(&self, token: &Token, query: &'a Query<'a>) -> Result<serde_json::Value> {
         tracing::info!("--> Request to Zoho");
-
-        let query = Query::builder()
-            .organization_id("820117212")
-            .date("2024-05-27")?
-            .build()?;
 
         let res = self
             .client
