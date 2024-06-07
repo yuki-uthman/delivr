@@ -63,7 +63,10 @@ mod test {
         // Parse the string into a serde_json::Value
         let json_value: serde_json::Value = serde_json::from_str(&data)?;
 
-        let invoice = json_value.get("invoice").ok_or("invoice not found").unwrap();
+        let invoice = json_value
+            .get("invoice")
+            .ok_or("invoice not found")
+            .unwrap();
         let _ = Invoice::from(invoice.clone());
 
         Ok(())

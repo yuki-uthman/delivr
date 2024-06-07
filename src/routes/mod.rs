@@ -69,7 +69,6 @@ pub async fn request_token(
         tokens.insert(&token).await?;
     }
 
-
     tracing::info!("<-- 200");
     Ok(StatusCode::OK)
 }
@@ -83,7 +82,6 @@ pub async fn get_token(
 
     let tokens = Tokens { pool: &state.pool };
     let token = tokens.get_by_scope(&scope).await?;
-
 
     tracing::info!("<-- 200");
     Ok(Json(token))
