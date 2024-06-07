@@ -9,7 +9,7 @@ use crate::app::AppState;
 use crate::config::Config;
 use crate::database::Tokens;
 use crate::error::{Error, Result};
-use crate::zoho::Query;
+use crate::zoho::{Invoice, InvoiceIDs, Query};
 
 pub async fn build_router(config: &Config) -> Result<Router> {
     let state = AppState::build_state(config).await?;
@@ -145,6 +145,22 @@ pub async fn invoices_by_date(
     }
 
     let value = client.get_invoices_with_query(&token, &query).await?;
+    let ids = InvoiceIDs::from(value);
+    tracing::info!("<-- {} invoices", ids.inner.len());
+
+    let mut invoices = vec![];
+    for invoice in &ids.inner {
+        let value = client
+            .get_invoice(&token, &invoice.id.clone(), &query)
+            .await?;
+        let invoice = Invoice::from(value);
+        invoices.push(invoice);
+    }
+
+    tracing::info!("<-- 200");
+
+    Ok(Json(invoices))
+}
 
 #[derive(serde::Deserialize, Debug, Clone)]
 struct OrgaznizationQuery {
