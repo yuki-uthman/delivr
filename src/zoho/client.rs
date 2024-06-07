@@ -71,7 +71,11 @@ impl Client {
         Ok(token)
     }
 
-    pub async fn get_all_invoices<'a>(&self, token: &Token, query: &'a Query<'a>) -> Result<serde_json::Value> {
+    pub async fn get_all_invoices<'a>(
+        &self,
+        token: &Token,
+        query: &'a Query<'a>,
+    ) -> Result<serde_json::Value> {
         tracing::info!("--> Request to Zoho");
 
         let res = self
