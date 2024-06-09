@@ -1,4 +1,7 @@
-use serde::{ser::{SerializeStruct, Serializer}, Deserialize};
+use serde::{
+    ser::{SerializeStruct, Serializer},
+    Deserialize,
+};
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct InvoiceIDs {
@@ -29,7 +32,7 @@ impl From<serde_json::Value> for Invoices {
     }
 }
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct Invoice {
     #[serde(deserialize_with = "de_deserialize")]
     pub created_time: chrono::NaiveDateTime,
@@ -39,6 +42,30 @@ pub struct Invoice {
     pub line_items: Vec<LineItem>,
     pub salesperson_name: String,
     pub total: f64,
+}
+
+impl Invoice {
+    pub fn profit(&self) -> f64 {
+        self.line_items.iter().map(|li| li.profit()).sum::<f64>()
+    }
+}
+
+impl serde::Serialize for Invoice {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Invoice", 8)?;
+        state.serialize_field("created_time", &self.created_time)?;
+        state.serialize_field("customer_name", &self.customer_name)?;
+        state.serialize_field("date", &self.date)?;
+        state.serialize_field("invoice_id", &self.invoice_id)?;
+        state.serialize_field("line_items", &self.line_items)?;
+        state.serialize_field("salesperson_name", &self.salesperson_name)?;
+        state.serialize_field("total", &self.total)?;
+        state.serialize_field("profit", &self.profit())?;
+        state.end()
+    }
 }
 
 // 2024-05-27T19:26:32+0800
@@ -69,7 +96,7 @@ pub struct LineItem {
 
 impl LineItem {
     pub fn profit(&self) -> f64 {
-        self.item_total - self.purchase_rate * self.quantity
+        (self.rate - self.purchase_rate) * self.quantity
     }
 }
 
