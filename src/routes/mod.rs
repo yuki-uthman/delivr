@@ -40,8 +40,6 @@ pub async fn build_router(config: &Config) -> Result<Router> {
 
 #[instrument(skip(state))]
 pub async fn health(State(state): State<AppState>) -> Result<impl IntoResponse> {
-    tracing::info!("health check");
-
     let result: i32 = sqlx::query_scalar("SELECT 1")
         .fetch_one(&state.pool)
         .await
