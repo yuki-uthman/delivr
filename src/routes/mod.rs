@@ -2,6 +2,7 @@ use axum::extract::{Path, Query as QueryExtractor, State};
 use axum::Json;
 use axum::{http::StatusCode, response::IntoResponse};
 use axum::{routing::get, Router};
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::{self, TraceLayer};
 use tracing::instrument;
 
@@ -13,6 +14,11 @@ use crate::zoho::{Invoice, InvoiceIDs, Query};
 
 pub async fn build_router(config: &Config) -> Result<Router> {
     let state = AppState::build_state(config).await?;
+
+    let cors = CorsLayer::new()
+        .allow_origin(Any) // Allow all origins
+        .allow_methods(Any) // Allow all methods
+        .allow_headers(Any); // Allow all headers
 
     Ok(Router::new()
         .route("/health", get(health))
@@ -28,6 +34,7 @@ pub async fn build_router(config: &Config) -> Result<Router> {
                 .on_request(trace::DefaultOnRequest::new())
                 .on_response(trace::DefaultOnResponse::new()),
         )
+        .layer(cors)
         .with_state(state))
 }
 
