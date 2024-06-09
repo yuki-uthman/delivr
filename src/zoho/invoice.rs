@@ -1,3 +1,5 @@
+use serde::{ser::{SerializeStruct, Serializer}, Deserialize};
+
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct InvoiceIDs {
     #[serde(rename = "invoices")]
@@ -42,12 +44,36 @@ impl From<serde_json::Value> for Invoice {
     }
 }
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct LineItem {
     pub name: String,
     pub rate: f64,
     pub quantity: f64,
     pub purchase_rate: f64,
+    pub item_total: f64,
+}
+
+impl LineItem {
+    pub fn profit(&self) -> f64 {
+        self.item_total - self.purchase_rate * self.quantity
+    }
+}
+
+// Implement custom serialization to include `profit`
+impl serde::Serialize for LineItem {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("LineItem", 6)?;
+        state.serialize_field("item_profit", &self.profit())?;
+        state.serialize_field("item_total", &self.item_total)?;
+        state.serialize_field("name", &self.name)?;
+        state.serialize_field("purchase_rate", &self.purchase_rate)?;
+        state.serialize_field("quantity", &self.quantity)?;
+        state.serialize_field("rate", &self.rate)?;
+        state.end()
+    }
 }
 
 #[cfg(test)]
@@ -69,6 +95,25 @@ mod test {
             .unwrap();
         let _ = Invoice::from(invoice.clone());
 
+        Ok(())
+    }
+
+    #[test]
+    fn line_item_serialize() -> Result<()> {
+        let line_item = LineItem {
+            name: "name".to_string(),
+            rate: 11.0,
+            quantity: 10.0,
+            purchase_rate: 10.0,
+            item_total: 110.0,
+        };
+
+        let serialized = serde_json::to_string(&line_item)?;
+
+        assert_eq!(
+            serialized,
+            r#"{"item_profit":10.0,"item_total":110.0,"name":"name","purchase_rate":10.0,"quantity":10.0,"rate":11.0}"#
+        );
         Ok(())
     }
 }
