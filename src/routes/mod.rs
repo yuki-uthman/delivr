@@ -3,8 +3,8 @@ use axum::Json;
 use axum::{http::StatusCode, response::IntoResponse};
 use axum::{routing::get, Router};
 use tower_http::cors::{Any, CorsLayer};
-use tower_http::trace::{self, TraceLayer};
 use tower_http::services::ServeDir;
+use tower_http::trace::{self, TraceLayer};
 use tracing::instrument;
 
 use crate::app::AppState;
