@@ -31,11 +31,25 @@ impl From<serde_json::Value> for Invoices {
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct Invoice {
+    #[serde(deserialize_with = "de_deserialize")]
+    pub created_time: chrono::NaiveDateTime,
     pub customer_name: String,
     pub date: String,
     pub invoice_id: String,
     pub line_items: Vec<LineItem>,
     pub salesperson_name: String,
+    pub total: f64,
+}
+
+// 2024-05-27T19:26:32+0800
+fn de_deserialize<'de, D>(deserializer: D) -> Result<chrono::NaiveDateTime, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    let datetime = chrono::NaiveDateTime::parse_from_str(&s, "%Y-%m-%dT%H:%M:%S%z")
+        .map_err(serde::de::Error::custom)?;
+    Ok(datetime)
 }
 
 impl From<serde_json::Value> for Invoice {

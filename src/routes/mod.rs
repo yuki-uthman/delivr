@@ -162,6 +162,8 @@ pub async fn invoices_by_date(
         invoices.push(invoice);
     }
 
+    invoices.sort_by(|a, b| a.created_time.cmp(&b.created_time));
+
     tracing::info!("<-- 200");
 
     Ok(Json(invoices))
