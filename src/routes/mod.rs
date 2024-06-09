@@ -4,6 +4,7 @@ use axum::{http::StatusCode, response::IntoResponse};
 use axum::{routing::get, Router};
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::{self, TraceLayer};
+use tower_http::services::ServeDir;
 use tracing::instrument;
 
 use crate::app::AppState;
@@ -20,6 +21,8 @@ pub async fn build_router(config: &Config) -> Result<Router> {
         .allow_methods(Any) // Allow all methods
         .allow_headers(Any); // Allow all headers
 
+    let serve_website = ServeDir::new("static");
+
     Ok(Router::new()
         .route("/health", get(health))
         .route("/token/:code", get(request_token))
@@ -27,6 +30,7 @@ pub async fn build_router(config: &Config) -> Result<Router> {
         .route("/tokens/:scope", get(get_token))
         .route("/invoices", get(invoices_by_date))
         .route("/invoice/:id", get(invoice))
+        .nest_service("/", serve_website)
         // Add a tracing layer to all requests
         .layer(
             TraceLayer::new_for_http()

@@ -1,0 +1,138 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 0;
+    max-width: 100%;
+}
+
+h1 {
+    text-align: center;
+}
+
+.invoice-date {
+    text-align: right;
+}
+
+#container {
+    max-width: 600px;
+    margin: 0 auto; /* This centers the container horizontally */
+}
+
+#date-picker-container {
+    display: flex;
+    align-items: center;
+    margin: 10px;
+}
+
+input[type="date"] {
+    /* width: 100%; */
+    padding: 10px;
+    font-size: 24px;
+    border: 3px solid #ccc;
+    border-radius: 10px;
+    margin: 10px 0;
+    background-color: #fff;
+    box-sizing: border-box;
+}
+
+#invoice-date {
+    margin: 0 10px;
+}
+
+button {
+    margin: 5px;
+    padding: 5px 10px;
+}
+
+#invoices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.invoice {
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+.invoice-total {
+    font-size: 16px;
+    text-align: right;
+}
+
+.total-card {
+    border: 5px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+.total-sales-profit {
+    font-weight: bold;
+    font-size: 18px;
+    text-align: right;
+}
+
+.invoice h2 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+}
+
+.invoice p {
+    margin: 5px 0;
+    font-size: 12px;
+}
+
+.invoice .line-item {
+    margin-bottom: 10px;
+}
+
+.invoice .line-item p {
+    margin: 5px 0;
+    font-size: 12px;
+}
+
+/* CSS for loading animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#loading {
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+    margin: auto;
+    margin-top: 20px;
+}
+
+/* @media (max-width: 600px) { */
+/*     body { */
+/*         margin: 10px; */
+/*     } */
+
+/*     .invoice { */
+/*         padding: 8px; */
+/*         margin-bottom: 15px; */
+/*     } */
+
+/*     .invoice h2 { */
+/*         font-size: 16px; */
+/*     } */
+
+/*     .invoice p { */
+/*         font-size: 14px; */
+/*     } */
+
+/*     .invoice .line-item p { */
+/*         font-size: 14px; */
+/*     } */
+/* } */
+

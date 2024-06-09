@@ -32,13 +32,12 @@ chrono = { version = "0.4.24", features = ["serde"] }
 secrecy = { version = "0.8", features = ["serde"] }
 
 # logging
-tower-http = { version = "0.5.0", features = ["trace", "cors"] }
+tower-http = { version = "0.5.0", features = ["trace", "cors", "fs"] }
 log = "0.4"
 tracing = "0.1.19"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
 tracing-log = "0.1"
 uuid = { version = "1", features = ["v4", "serde"] }
-ansi_term = "0.12"
 
 [dev-dependencies]
 tokio = "1"
