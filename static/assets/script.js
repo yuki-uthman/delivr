@@ -113,6 +113,13 @@ document.getElementById('left-button').addEventListener('click', () => changeDat
 document.getElementById('right-button').addEventListener('click', () => changeDateBy(1));
 
 // Set default date
-document.getElementById('invoice-date').valueAsDate = new Date();
+let picker = document.getElementById('invoice-date');
+
+var now = new Date();
+var day = ("0" + now.getDate()).slice(-2);
+var month = ("0" + (now.getMonth() + 1)).slice(-2);
+var today = now.getFullYear()+"-"+(month)+"-"+(day) ;
+
+picker.value = today;
 
 fetchAndDisplayInvoices();
