@@ -112,27 +112,3 @@ button {
     margin: auto;
     margin-top: 20px;
 }
-
-/* @media (max-width: 600px) { */
-/*     body { */
-/*         margin: 10px; */
-/*     } */
-
-/*     .invoice { */
-/*         padding: 8px; */
-/*         margin-bottom: 15px; */
-/*     } */
-
-/*     .invoice h2 { */
-/*         font-size: 16px; */
-/*     } */
-
-/*     .invoice p { */
-/*         font-size: 14px; */
-/*     } */
-
-/*     .invoice .line-item p { */
-/*         font-size: 14px; */
-/*     } */
-/* } */
-
