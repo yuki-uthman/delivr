@@ -1,21 +1,27 @@
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    padding: 0;
-    max-width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.lightblue {
+    background-color: lightblue;
 }
 
 h1 {
     text-align: center;
 }
 
-.invoice-date {
-    text-align: right;
-}
-
 #container {
     max-width: 600px;
-    margin: 0 auto; /* This centers the container horizontally */
+    min-height: 100%;
+    margin: auto; /* This centers the container horizontally */
+    background-color: #f2f2f2;
 }
 
 #date-picker-container {
@@ -39,6 +45,16 @@ button {
     padding: 5px 10px;
 }
 
+/* invoices + total */
+#report-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 5px;
+}
+
 #invoices {
     display: flex;
     flex-direction: column;
@@ -51,25 +67,6 @@ button {
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     background-color: #fff;
-}
-
-.invoice-total {
-    font-size: 16px;
-    text-align: right;
-}
-
-.total-card {
-    border: 5px solid #ddd;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    background-color: #fff;
-}
-
-.total-sales-profit {
-    font-weight: bold;
-    font-size: 18px;
-    text-align: right;
 }
 
 .invoice h2 {
@@ -89,6 +86,25 @@ button {
 .invoice .line-item p {
     margin: 5px 0;
     font-size: 12px;
+}
+
+.invoice-total {
+    font-size: 16px;
+    text-align: right;
+}
+
+.total-card {
+    border: 5px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+.total-sales-profit {
+    font-weight: bold;
+    font-size: 18px;
+    text-align: right;
 }
 
 #loading {

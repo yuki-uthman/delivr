@@ -2,7 +2,7 @@
 function showLoadingAnimation() {
     const loadingDiv = document.createElement('div');
     loadingDiv.id = 'loading';
-    document.getElementById('container').appendChild(loadingDiv);
+    document.getElementById('report-container').appendChild(loadingDiv);
 }
 
 // Function to hide loading animation
