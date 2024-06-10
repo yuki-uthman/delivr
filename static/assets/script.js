@@ -24,7 +24,7 @@ async function fetchAndDisplayInvoices() {
 
         showLoadingAnimation();
 
-        const selectedDate = document.getElementById('invoice-date').value;
+        const selectedDate = document.getElementById('date-picker').value;
         const url = `https://delivr.onrender.com/invoices?organization_id=820117212&date=${selectedDate}`;
 
         const response = await fetch(url);
@@ -98,7 +98,7 @@ function displayInvoices(invoices) {
 
 // Function to change date by a specified number of days
 function changeDateBy(days) {
-    const dateInput = document.getElementById('invoice-date');
+    const dateInput = document.getElementById('date-picker');
     const currentDate = new Date(dateInput.value);
     currentDate.setDate(currentDate.getDate() + days);
     dateInput.valueAsDate = currentDate;
@@ -106,14 +106,14 @@ function changeDateBy(days) {
 }
 
 // Add event listener to date picker
-document.getElementById('invoice-date').addEventListener('change', fetchAndDisplayInvoices);
+document.getElementById('date-picker').addEventListener('change', fetchAndDisplayInvoices);
 
 // Add event listeners to buttons
 document.getElementById('left-button').addEventListener('click', () => changeDateBy(-1));
 document.getElementById('right-button').addEventListener('click', () => changeDateBy(1));
 
 // Set default date
-let picker = document.getElementById('invoice-date');
+let picker = document.getElementById('date-picker');
 
 var now = new Date();
 var day = ("0" + now.getDate()).slice(-2);

@@ -24,8 +24,7 @@ h1 {
     margin: 10px;
 }
 
-input[type="date"] {
-    /* width: 100%; */
+#date-picker {
     padding: 10px;
     font-size: 24px;
     border: 3px solid #ccc;
@@ -33,10 +32,6 @@ input[type="date"] {
     margin: 10px 0;
     background-color: #fff;
     box-sizing: border-box;
-}
-
-#invoice-date {
-    margin: 0 10px;
 }
 
 button {
