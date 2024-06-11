@@ -16,7 +16,7 @@ function hideLoadingAnimation() {
 // Function to fetch and display the data
 async function fetchAndDisplayInvoices() {
     try {
-        // Clear invoices container
+        // Clear containers
         const invoicesContainer = document.getElementById('invoices');
         invoicesContainer.innerHTML = '';
         const totalCard = document.getElementById('total');
@@ -24,8 +24,12 @@ async function fetchAndDisplayInvoices() {
 
         showLoadingAnimation();
 
-        const selectedDate = document.getElementById('date-picker').value;
-        const url = `https://delivr.onrender.com/invoices?organization_id=820117212&date=${selectedDate}`;
+        // Get the selected date from the date picker
+        const selectedDate = $('#date-picker').data('daterangepicker').startDate.format('D MMM YYYY');
+
+        // Format the selected date to match the format required by the API
+        const formattedDate = moment(selectedDate, 'D MMM YYYY').format('YYYY-MM-DD');
+        const url = `https://delivr.onrender.com/invoices?organization_id=820117212&date=${formattedDate}`;
 
         const response = await fetch(url);
         const data = await response.json();
@@ -98,28 +102,36 @@ function displayInvoices(invoices) {
 
 // Function to change date by a specified number of days
 function changeDateBy(days) {
-    const dateInput = document.getElementById('date-picker');
-    const currentDate = new Date(dateInput.value);
-    currentDate.setDate(currentDate.getDate() + days);
-    dateInput.valueAsDate = currentDate;
+    const dateInput = $('#date-picker');
+    const currentDate = dateInput.data('daterangepicker').startDate;
+    const newDate = currentDate.clone().add(days, 'days');
+
+    dateInput.data('daterangepicker').setStartDate(newDate);
     fetchAndDisplayInvoices();
 }
 
-// Add event listener to date picker
-document.getElementById('date-picker').addEventListener('change', fetchAndDisplayInvoices);
+function initializeDatePicker() {
+    $('#date-picker').daterangepicker({
+        locale: {
+            format: 'D MMM YYYY'
+        },
+        singleDatePicker: true,
+        showDropdowns: false,
+        autoApply: true,
+        minYear: 1901,
+        maxYear: parseInt(moment().format('YYYY'), 10),
+        startDate: moment() // Set the initial date to today
+    }, function(start, end, label) {
+        fetchAndDisplayInvoices();
+    });
+}
+
 
 // Add event listeners to buttons
 document.getElementById('left-button').addEventListener('click', () => changeDateBy(-1));
 document.getElementById('right-button').addEventListener('click', () => changeDateBy(1));
 
-// Set default date
-let picker = document.getElementById('date-picker');
-
-var now = new Date();
-var day = ("0" + now.getDate()).slice(-2);
-var month = ("0" + (now.getMonth() + 1)).slice(-2);
-var today = now.getFullYear()+"-"+(month)+"-"+(day) ;
-
-picker.value = today;
-
-fetchAndDisplayInvoices();
+// Call the function to initialize the date picker when the DOM is ready
+$(function() {
+    initializeDatePicker();
+});
